@@ -31,7 +31,11 @@ const userSchema = new mongoose.Schema({
   },
   profilePicture: {
     type: String
-  }
+  },
+  friends: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }]
 }, {
   timestamps: true
 });

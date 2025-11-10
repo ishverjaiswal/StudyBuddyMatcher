@@ -48,3 +48,59 @@ export const getMessages = async (userId1, userId2) => {
   const response = await fetch(`${API_BASE_URL}/chat/${userId1}/${userId2}`);
   return response.json();
 };
+
+export const markAllAsRead = async (userId1, userId2) => {
+  const response = await fetch(`${API_BASE_URL}/chat/read-all/${userId1}/${userId2}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+  
+  return response.json();
+};
+
+// Friend API calls
+export const sendFriendRequest = async (senderId, receiverId) => {
+  const response = await fetch(`${API_BASE_URL}/friends/request`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ senderId, receiverId }),
+  });
+  
+  return response.json();
+};
+
+export const getFriendRequests = async (userId) => {
+  const response = await fetch(`${API_BASE_URL}/friends/requests/${userId}`);
+  return response.json();
+};
+
+export const acceptFriendRequest = async (requestId) => {
+  const response = await fetch(`${API_BASE_URL}/friends/accept/${requestId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+  
+  return response.json();
+};
+
+export const rejectFriendRequest = async (requestId) => {
+  const response = await fetch(`${API_BASE_URL}/friends/reject/${requestId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+  
+  return response.json();
+};
+
+export const getFriends = async (userId) => {
+  const response = await fetch(`${API_BASE_URL}/friends/friends/${userId}`);
+  return response.json();
+};

@@ -36,9 +36,14 @@ const Header = ({ darkMode, toggleDarkMode }) => {
             Dashboard
           </Link>
           {user && (
-            <Link to="/profile" className="text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium">
-              Profile
-            </Link>
+            <>
+              <Link to="/friends" className="text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium">
+                Friends
+              </Link>
+              <Link to="/profile" className="text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium">
+                Profile
+              </Link>
+            </>
           )}
         </nav>
         

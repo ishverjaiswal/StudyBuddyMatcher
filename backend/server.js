@@ -13,7 +13,7 @@ const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI, {
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/studybuddy', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 }).then(() => {
@@ -25,6 +25,7 @@ mongoose.connect(process.env.MONGODB_URI, {
   });
 }).catch((error) => {
   console.error('MongoDB connection error:', error);
+  process.exit(1); // Exit if we can't connect to the database
 });
 
 // Middleware
@@ -70,16 +71,21 @@ io.on('connection', (socket) => {
       const message = new Message({
         sender: data.senderId,
         content: data.message,
+        messageType: data.messageType || 'text',
+        imageUrl: data.imageUrl || null,
         // In a real app, you might want to store the room or receiver info
       });
       
       await message.save();
       
-      // Broadcast message to room
+      // Broadcast message to room with message ID
       socket.to(data.room).emit("receive_message", {
+        messageId: message._id,
         senderId: data.senderId,
         message: data.message,
-        timestamp: new Date()
+        timestamp: new Date(),
+        messageType: data.messageType || 'text',
+        imageUrl: data.imageUrl || null
       });
     } catch (error) {
       console.error('Error saving message:', error);
@@ -89,6 +95,11 @@ io.on('connection', (socket) => {
   // Handle typing indicator
   socket.on('typing', (data) => {
     socket.to(data.room).emit("user_typing", { userId: data.userId, isTyping: data.isTyping });
+  });
+  
+  // Handle message read receipts
+  socket.on('messages_read', (data) => {
+    socket.to(data.room).emit("message_read", { userId: data.userId });
   });
   
   // Handle user disconnect
@@ -118,6 +129,9 @@ app.use('/api/match', require('./routes/matchRoutes'));
 
 // Chat routes
 app.use('/api/chat', require('./routes/chatRoutes'));
+
+// Friend routes
+app.use('/api/friends', require('./routes/friendRoutes'));
 
 // Handle server errors
 server.on('error', (error) => {

@@ -3,12 +3,14 @@ const Message = require('../models/Message');
 // Send a new message
 const sendMessage = async (req, res) => {
   try {
-    const { sender, receiver, content } = req.body;
+    const { sender, receiver, content, messageType, imageUrl } = req.body;
     
     const message = new Message({
       sender,
       receiver,
-      content
+      content,
+      messageType: messageType || 'text',
+      imageUrl: imageUrl || null
     });
     
     const savedMessage = await message.save();
@@ -61,8 +63,29 @@ const markAsRead = async (req, res) => {
   }
 };
 
+// Mark all messages as read between two users
+const markAllAsRead = async (req, res) => {
+  try {
+    const { userId1, userId2 } = req.params;
+    
+    const result = await Message.updateMany(
+      { 
+        sender: userId2, 
+        receiver: userId1,
+        read: false
+      },
+      { read: true }
+    );
+    
+    res.json({ message: 'Messages marked as read', modifiedCount: result.modifiedCount });
+  } catch (error) {
+    res.status(500).json({ message: 'Error marking messages as read', error: error.message });
+  }
+};
+
 module.exports = {
   sendMessage,
   getMessages,
-  markAsRead
+  markAsRead,
+  markAllAsRead
 };

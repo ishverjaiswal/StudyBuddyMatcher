@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { findMatches } from '../services/api';
+import { sendFriendRequest } from '../services/api';
 
 const DashboardPage = () => {
   const navigate = useNavigate();
@@ -10,6 +11,7 @@ const DashboardPage = () => {
   const [studyBuddies, setStudyBuddies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [requestStatus, setRequestStatus] = useState({}); // Track request status for each buddy
   
   useEffect(() => {
     const fetchMatches = async () => {
@@ -83,10 +85,52 @@ const DashboardPage = () => {
     );
   }
   
-  const handleConnect = (buddyId) => {
-    // Here you would typically initiate a chat with the buddy
-    console.log(`Connecting with buddy ${buddyId}`);
-    navigate(`/chat/${buddyId}`);
+  const handleConnect = async (buddyId) => {
+    try {
+      // Set request status to loading
+      setRequestStatus(prev => ({ ...prev, [buddyId]: 'sending' }));
+      
+      // Send friend request
+      const response = await sendFriendRequest(user._id || user.id, buddyId);
+      
+      // Check if response has an error message
+      if (response.message) {
+        // Error occurred
+        console.error('Friend request error:', response.message);
+        setRequestStatus(prev => ({ ...prev, [buddyId]: 'error' }));
+        // Show error message to user
+        setError(response.message);
+        setTimeout(() => {
+          setRequestStatus(prev => ({ ...prev, [buddyId]: null }));
+          setError(null);
+        }, 3000);
+      } else if (response._id) {
+        // Request sent successfully
+        setRequestStatus(prev => ({ ...prev, [buddyId]: 'sent' }));
+        
+        // Show success message
+        setTimeout(() => {
+          setRequestStatus(prev => ({ ...prev, [buddyId]: null }));
+        }, 3000);
+      } else {
+        // Unexpected response
+        console.error('Unexpected response:', response);
+        setRequestStatus(prev => ({ ...prev, [buddyId]: 'error' }));
+        setError('Unexpected error occurred');
+        setTimeout(() => {
+          setRequestStatus(prev => ({ ...prev, [buddyId]: null }));
+          setError(null);
+        }, 3000);
+      }
+    } catch (err) {
+      console.error('Error sending request:', err);
+      setRequestStatus(prev => ({ ...prev, [buddyId]: 'error' }));
+      setError('Network error occurred');
+      setTimeout(() => {
+        setRequestStatus(prev => ({ ...prev, [buddyId]: null }));
+        setError(null);
+      }, 3000);
+    }
   };
   
   // Sort buddies by compatibility score for top matches
@@ -97,6 +141,14 @@ const DashboardPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <div className="container mx-auto px-4">
+        {/* Error display for friend requests */}
+        {error && (
+          <div className="mb-4 p-4 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-100 rounded-lg">
+            <p className="font-bold">Error:</p>
+            <p>{error}</p>
+          </div>
+        )}
+        
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-2">Your Study Buddies</h1>
           <p className="text-gray-600 dark:text-gray-400">
@@ -108,8 +160,11 @@ const DashboardPage = () => {
         <div className="mb-10">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-semibold text-gray-800 dark:text-white">Top Matches</h2>
-            <button className="text-indigo-600 dark:text-indigo-400 hover:underline">
-              View All
+            <button 
+              onClick={() => navigate('/friends')}
+              className="text-indigo-600 dark:text-indigo-400 hover:underline"
+            >
+              View Friends
             </button>
           </div>
           
@@ -180,9 +235,24 @@ const DashboardPage = () => {
                     
                     <button
                       onClick={() => handleConnect(buddy.id)}
-                      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg transition duration-300"
+                      disabled={requestStatus[buddy.id] === 'sending'}
+                      className={`w-full font-medium py-2 px-4 rounded-lg transition duration-300 ${
+                        requestStatus[buddy.id] === 'sending'
+                          ? 'bg-gray-400 text-white cursor-not-allowed'
+                          : requestStatus[buddy.id] === 'sent'
+                          ? 'bg-green-600 text-white'
+                          : requestStatus[buddy.id] === 'error'
+                          ? 'bg-red-600 text-white'
+                          : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                      }`}
                     >
-                      Connect
+                      {requestStatus[buddy.id] === 'sending'
+                        ? 'Sending...'
+                        : requestStatus[buddy.id] === 'sent'
+                        ? 'Request Sent'
+                        : requestStatus[buddy.id] === 'error'
+                        ? 'Error - Try Again'
+                        : 'Connect'}
                     </button>
                   </div>
                 </div>
@@ -263,9 +333,24 @@ const DashboardPage = () => {
                     
                     <button
                       onClick={() => handleConnect(buddy.id)}
-                      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg transition duration-300"
+                      disabled={requestStatus[buddy.id] === 'sending'}
+                      className={`w-full font-medium py-2 px-4 rounded-lg transition duration-300 ${
+                        requestStatus[buddy.id] === 'sending'
+                          ? 'bg-gray-400 text-white cursor-not-allowed'
+                          : requestStatus[buddy.id] === 'sent'
+                          ? 'bg-green-600 text-white'
+                          : requestStatus[buddy.id] === 'error'
+                          ? 'bg-red-600 text-white'
+                          : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                      }`}
                     >
-                      Connect
+                      {requestStatus[buddy.id] === 'sending'
+                        ? 'Sending...'
+                        : requestStatus[buddy.id] === 'sent'
+                        ? 'Request Sent'
+                        : requestStatus[buddy.id] === 'error'
+                        ? 'Error - Try Again'
+                        : 'Connect'}
                     </button>
                   </div>
                 </div>

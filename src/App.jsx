@@ -6,6 +6,7 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import ChatPage from './pages/ChatPage';
 import ProfilePage from './pages/ProfilePage';
+import FriendsPage from './pages/FriendsPage';
 import Header from './components/Header';
 import { AuthProvider } from './contexts/AuthContext';
 
@@ -38,6 +39,7 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/dashboard" element={<><Header darkMode={darkMode} toggleDarkMode={toggleDarkMode} /><DashboardPage /></>} />
             <Route path="/profile" element={<><Header darkMode={darkMode} toggleDarkMode={toggleDarkMode} /><ProfilePage /></>} />
+            <Route path="/friends" element={<><Header darkMode={darkMode} toggleDarkMode={toggleDarkMode} /><FriendsPage /></>} />
             <Route path="/chat/:buddyId" element={<><Header darkMode={darkMode} toggleDarkMode={toggleDarkMode} /><ChatPage /></>} />
           </Routes>
         </div>
